@@ -1,0 +1,139 @@
+# /etc/systemd/system/llama-server.service
+# Qwen3-0.6B llama.cpp HTTP 服务器的 systemd 服务配置
+#
+# 安装方法:
+#   1. 编辑此文件，替换 YOUR_USERNAME 为实际用户名
+#   2. sudo cp llama-server.service /etc/systemd/system/
+#   3. sudo systemctl daemon-reload
+#   4. sudo systemctl enable llama-server
+#   5. sudo systemctl start llama-server
+#
+# 管理命令:
+#   sudo systemctl start llama-server     # 启动服务
+#   sudo systemctl stop llama-server      # 停止服务
+#   sudo systemctl restart llama-server   # 重启服务
+#   sudo systemctl status llama-server    # 查看状态
+#   sudo journalctl -u llama-server -f    # 查看日志
+
+[Unit]
+Description=Llama.cpp HTTP Server for Qwen3-0.6B
+Documentation=https://github.com/ggerganov/llama.cpp
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# 用户和工作目录
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/llama.cpp
+
+# 主命令
+ExecStart=/home/pi/llama.cpp/server \
+    --model /home/pi/models/qwen3-0.6b-q4_k_m.gguf \
+    --host 0.0.0.0 \
+    --port 8080 \
+    --threads 4 \
+    --ctx-size 2048 \
+    --batch-size 512 \
+    --log-disable
+
+# 启动前检查
+ExecStartPre=/bin/sleep 2
+ExecStartPre=/bin/sh -c 'test -f /home/pi/models/qwen3-0.6b-q4_k_m.gguf'
+
+# 停止命令
+ExecStop=/bin/kill -TERM $MAINPID
+
+# 重启策略
+Restart=always
+RestartSec=10
+
+# 性能优化
+Nice=-10
+IOSchedulingClass=realtime
+IOSchedulingPriority=0
+
+# 资源限制
+MemoryMax=6G
+MemoryHigh=5G
+TasksMax=256
+
+# 安全限制
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/pi/llama.cpp
+ReadOnlyPaths=/home/pi/models
+
+# 环境变量
+Environment="OMP_NUM_THREADS=4"
+Environment="LLAMA_CACHE=/tmp/llama-cache"
+
+# 标准输出和错误
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=llama-server
+
+# 超时设置
+TimeoutStartSec=120
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
+
+# 说明:
+# 
+# [Unit] 部分:
+# - Description: 服务描述
+# - After: 在网络启动后运行
+# - Wants: 依赖网络在线
+#
+# [Service] 部分:
+# - Type=simple: 简单服务类型
+# - User/Group: 运行用户
+# - WorkingDirectory: 工作目录
+# - ExecStart: 启动命令
+#   * --host 0.0.0.0: 监听所有网络接口
+#   * --port 8080: HTTP 端口
+#   * --threads 4: 使用 4 个 CPU 线程
+#   * --ctx-size 2048: 上下文窗口大小
+#   * --batch-size 512: 批处理大小
+#   * --log-disable: 禁用日志（可选）
+#
+# - Restart=always: 服务崩溃时自动重启
+# - RestartSec=10: 重启前等待 10 秒
+#
+# - Nice=-10: 提高进程优先级（-20 到 19，越低越优先）
+# - IOSchedulingClass=realtime: 实时 IO 调度
+#
+# - MemoryMax/High: 内存限制（根据实际调整）
+# - TasksMax: 最大任务数
+#
+# [Install] 部分:
+# - WantedBy=multi-user.target: 开机自启
+
+# 调整建议:
+#
+# 对于树莓派 5 (8GB):
+# - MemoryMax=6G 是合理的，留 2GB 给系统
+# - Nice=-10 提高优先级，确保流畅推理
+# - threads=4 充分利用 4 核 CPU
+#
+# 如果内存不足:
+# - 降低 ctx-size 到 1024
+# - 使用更小的量化模型（Q2_K）
+# - 减少 threads 到 2
+#
+# 如果需要更好性能:
+# - 增加 threads 到 8（如果 CPU 支持）
+# - 启用性能模式 CPU 调度器
+# - 使用 NVMe SSD 而非 MicroSD
+
+# 性能监控命令:
+# - htop: 查看 CPU 和内存使用
+# - vcgencmd measure_temp: 查看温度
+# - journalctl -u llama-server -f: 实时查看日志
+# - systemctl status llama-server: 查看服务状态

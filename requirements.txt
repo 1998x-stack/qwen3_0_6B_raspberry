@@ -1,0 +1,54 @@
+# Qwen3-0.6B FineWeb-Edu 微调环境依赖
+# Python 3.10+ 推荐
+
+# 核心深度学习框架
+torch>=2.1.0
+torchvision
+torchaudio
+
+# Unsloth - 高效微调框架
+# 安装方式 1 (推荐): 从源码安装最新版
+# pip install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git"
+
+# 安装方式 2: 稳定版
+unsloth>=2024.1
+
+# Hugging Face 生态
+transformers>=4.41.0
+datasets>=2.14.0
+accelerate>=0.21.0
+peft>=0.11.0
+trl>=0.8.0
+bitsandbytes>=0.41.0
+
+# 分词器和文本处理
+tokenizers>=0.13.3
+sentencepiece>=0.1.99
+protobuf>=3.20.0
+
+# 训练监控和日志
+tensorboard>=2.13.0
+# wandb  # 取消注释以启用 Weights & Biases
+
+# 数据处理
+pandas>=2.0.0
+numpy>=1.24.0
+pyarrow>=12.0.0
+
+# 实用工具
+tqdm>=4.65.0
+einops>=0.6.1
+
+# GGUF 转换（可选，用于 llama.cpp）
+# llama-cpp-python  # 如需本地转换 GGUF
+
+# Jupyter 支持（可选）
+# ipython
+# jupyter
+# notebook
+
+# 说明:
+# 1. 建议在虚拟环境中安装
+# 2. 需要 CUDA 11.8+ 和对应的 PyTorch 版本
+# 3. 对于 Colab: 使用 unsloth[colab-new] 版本
+# 4. 对于本地 GPU: 使用 unsloth[cu118] 或 unsloth[cu121]
